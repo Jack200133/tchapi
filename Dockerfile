@@ -1,29 +1,38 @@
-FROM ubuntu:22.04
+# Use the base image of Python 3.9 on Ubuntu
+FROM python:3.9-slim
 
-# Instalar las dependencias necesarias y Python 3.9
-RUN apt-get update && apt-get install -y \
-    software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && apt-get install -y \
-    python3.9 python3.9-distutils wget curl
+# Update Ubuntu package index and install prerequisites
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    libffi-dev \
+    gdal-bin \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar pip para Python 3.9
-RUN wget https://bootstrap.pypa.io/get-pip.py && python3.9 get-pip.py
-
-# Establecer el directorio de trabajo en /flask
+# Set the working directory inside the container
 WORKDIR /flask
 
-# Copiar requirements.txt al contenedor
-COPY requirements.txt .
+# Copy the required files to run your application
+COPY ./requirements.txt /flask/requirements.txt
 
-# Instalar las dependencias de requirements.txt
-RUN python3.9 -m pip install -r requirements.txt
 
-# Copiar el resto del código de la aplicación
-COPY . .
+# Upgrade pip
+RUN pip install --upgrade pip
 
-# Exponer el puerto 5000
+RUN pip install geopandas
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code to the container
+COPY ./blueprints /flask/blueprints
+COPY ./models /flask/models
+COPY ./scripts /flask/scripts
+COPY ./main.py /flask/main.py
+
+
+# Expose port 5000
 EXPOSE 5000
 
-# Comando para ejecutar la aplicación
-CMD ["python3.9", "/flask/main.py"]
+# Command to run the application
+CMD ["python", "/flask/main.py"]
