@@ -68,6 +68,7 @@ def get_geojson():
         return jsonify({'error': str(e)}), 500
 
 
+
 @geojson_api.route('/get_arcgis', methods=['GET'])
 def get_geojson():
     logger.info("Received request to get GeoJSON file.")
@@ -103,12 +104,13 @@ def get_geojson():
 
 
 
+
 @geojson_api.route('/get_tch_mean', methods=['GET'])
 def get_tch_mean():
     logger.info("Received request to get TCH mean values.")
     try:
         # Load the final results CSV
-        final_results_path = "../data/final_results.csv"
+        final_results_path = "./data/final_results.csv"
         if not os.path.exists(final_results_path):
             raise FileNotFoundError(f"File not found: {final_results_path}")
 
@@ -126,5 +128,6 @@ def get_tch_mean():
         return jsonify(tch_mean_values)
 
     except Exception as e:
-        logger.error(f"Error occurred while fetching TCH mean values: {str(e)}")
+        logger.error(
+            f"Error occurred while fetching TCH mean values: {str(e)}")
         return jsonify({'error': str(e)}), 500
