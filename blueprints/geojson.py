@@ -15,7 +15,7 @@ geojson_api = Blueprint('geojson_api', __name__)
 LOG_ROUTE = './logs/activity/'
 CONNECT_STR = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
 CONTAINER_NAME = "tchgeopandas"  # Replace with your container name
-BLOB_NAME = "outputv5.geojson"          # Replace with your blob name
+BLOB_NAME = "outputv6.geojson"          # Replace with your blob name
 
 if not os.path.exists(LOG_ROUTE):
     os.makedirs(LOG_ROUTE)
