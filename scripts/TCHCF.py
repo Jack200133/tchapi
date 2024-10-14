@@ -122,6 +122,15 @@ gdf = merged[columns].rename(columns={'ABS_IDCOMP': 'id', 'ZAFRA': 'zafra'})
 output_geojson_path = '../data/outputv6.geojson'
 gdf.to_file(output_geojson_path, driver='GeoJSON')
 
+
+# Reproyectar a EPSG:4326
+gdf = gdf.to_crs(epsg=4326)
+
+# Exportar a GeoJSON con el nuevo nombre
+output_geojson_pathgis = '../data/outputgisv6.geojson'
+gdf.to_file(output_geojson_pathgis, driver='GeoJSON')
+
+
 # Plot Predicted vs Real for the 6-month model as an example
 data_6m = pd.read_csv(os.path.join(data_dir, 'TEST_6Mesv7.csv'))
 predicted_labels_6m = final_results['TCHPRED_6Meses'].dropna().values[:len(data_6m)]
@@ -167,6 +176,50 @@ block_size = 4 * 1024 * 1024  # 4 MB
 
 try:
     with open(output_geojson_path, 'rb') as file:
+        idx = 0
+        while True:
+            data = file.read(block_size)
+            if not data:
+                break
+            idx += 1
+            block_id = base64.b64encode(str(idx).zfill(6).encode()).decode()
+            block_list.append(BlobBlock(block_id=block_id))
+            blob_client.stage_block(block_id=block_id, data=data)
+            print(f"Staged block {idx}")
+
+    # Commit the blocks
+    blob_client.commit_block_list(block_list)
+    print(f"Uploaded {blob_name} to container {container_name}.")
+except Exception as e:
+    print(f"An error occurred during upload: {e}")
+
+
+
+
+
+# Name of the container and blob (file)
+container_name = "tchgeopandas"  # Use lowercase letters, numbers, and hyphens
+blob_name = "outputgisv6.geojson"
+
+# Create the BlobServiceClient object
+blob_service_client = BlobServiceClient.from_connection_string(CONNECT_STR)
+
+# Create a container if it doesn't exist
+container_client = blob_service_client.get_container_client(container_name)
+try:
+    container_client.create_container()
+except Exception as e:
+    print(f"Container already exists. {e}")
+
+# Create a blob client
+blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+
+
+block_list = []
+block_size = 4 * 1024 * 1024  # 4 MB
+
+try:
+    with open(output_geojson_pathgis, 'rb') as file:
         idx = 0
         while True:
             data = file.read(block_size)
