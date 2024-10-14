@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify  # , make_response
 from azure.storage.blob import BlobServiceClient
 from dotenv import load_dotenv
 import json
+import pandas as pd
 
 load_dotenv("./environment/.env")
 
@@ -63,4 +64,32 @@ def get_geojson():
 
     except Exception as e:
         logger.error(f"Error occurred while fetching GeoJSON file: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+
+@geojson_api.route('/get_tch_mean', methods=['GET'])
+def get_tch_mean():
+    logger.info("Received request to get TCH mean values.")
+    try:
+        # Load the final results CSV
+        final_results_path = "../data/final_results.csv"
+        if not os.path.exists(final_results_path):
+            raise FileNotFoundError(f"File not found: {final_results_path}")
+
+        final_results = pd.read_csv(final_results_path)
+        logger.info("Final results CSV loaded successfully.")
+
+        # Group by 'ZAFRA' and calculate the mean for each prediction horizon
+        grouped_results = final_results.groupby('ZAFRA').mean().reset_index()
+
+        # Convert the results to a dictionary
+        tch_mean_values = grouped_results.to_dict(orient='records')
+        logger.info("TCH mean values calculated successfully.")
+
+        # Return the TCH mean values as a JSON response
+        return jsonify(tch_mean_values)
+
+    except Exception as e:
+        logger.error(f"Error occurred while fetching TCH mean values: {str(e)}")
         return jsonify({'error': str(e)}), 500

@@ -102,6 +102,9 @@ final_results = results_list[0]
 for i in range(1, len(results_list)):
     final_results = pd.merge(final_results, results_list[i], on=['ABS_IDCOMP', 'ZAFRA'], how='outer')
 
+
+final_results.to_csv("../data/final_results.csv", index=False)
+
 # Load the GeoDataFrame
 world = gpd.read_file("../data/SHAPES/shapefile.shp")
 
@@ -116,7 +119,7 @@ columns = ['geometry', 'ABS_IDCOMP', 'ZAFRA'] + [f'TCHPRED_{h}Meses' for h in TI
 gdf = merged[columns].rename(columns={'ABS_IDCOMP': 'id', 'ZAFRA': 'zafra'})
 
 # Export to GeoJSON
-output_geojson_path = '../outputv6.geojson'
+output_geojson_path = '../data/outputv6.geojson'
 gdf.to_file(output_geojson_path, driver='GeoJSON')
 
 # Plot Predicted vs Real for the 6-month model as an example
@@ -133,7 +136,7 @@ plt.title('Predicted vs Actual Values (6 Months)')
 plt.legend()
 
 # Save the plot
-output_plot_path = '../predicted_vs_actual_6m.png'
+output_plot_path = '../data/predicted_vs_actual_6m.png'
 plt.savefig(output_plot_path)
 plt.show()
 
