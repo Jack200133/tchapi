@@ -3,6 +3,7 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt
 
 # Set random seeds for reproducibility
 seed_ = 935115
@@ -10,8 +11,8 @@ np.random.seed(seed_)
 MODEL = 'AZUREML_'
 
 # Load the data
-data = pd.read_csv('./data/PROCESS/encoded_tch_prediction_data_zafrav3.2.csv')
-data = pd.read_csv('./data/PROCESS/TEST.csv')
+#data = pd.read_csv('../data/PROCESS/encoded_tch_prediction_data_zafrav3.2.csv')
+data = pd.read_csv('../data/PROCESS/TEST.csv')
 
 #rename prod_mad_Bispiribac 
 data = data.rename(columns={'prod_mad_Bispiribac ': 'prod_mad_Bispiribac'})
@@ -26,7 +27,7 @@ features = data.drop(['TCH', 'ABS_IDCOMP', 'ZAFRA'], axis=1)
 print(features.columns)
 
 # Define the directory where models are saved
-models_dir = './models'
+models_dir = '../models'
 
 # List all subdirectories in models_dir that start with 'CNN_'
 existing_dirs = [
@@ -112,7 +113,7 @@ results = pd.DataFrame({
     'TCHPRED_2Meses': random_pred_2meses,
 })
 # Load the GeoDataFrame
-world = gpd.read_file("./data/SHAPES/shapefile.shp")
+world = gpd.read_file("../data/SHAPES/shapefile.shp")
 
 # Ensure matching data types for merge
 world['unidad_01'] = world['unidad_01'].astype(str)
@@ -131,3 +132,18 @@ gdf = merged[columns].rename(columns={'ABS_IDCOMP': 'id', 'ZAFRA': 'zafra'})
 # Export to GeoJSON
 gdf.to_file('outputv4.geojson', driver='GeoJSON')
 
+# Plot Predicted vs Real and Real vs Real
+plt.figure(figsize=(12, 6))
+
+# Predicted vs Real
+plt.scatter(data['TCH'], predicted_labels, alpha=0.5, color='blue', label='Predicciones')
+plt.scatter(data['TCH'], data['TCH'], alpha=0.5, color='red', label='Valores reales')
+plt.plot([data['TCH'].min(), data['TCH'].max()], [data['TCH'].min(), data['TCH'].max()], 'r', lw=2)
+plt.xlabel('Real TCH')
+plt.ylabel('Predicted TCH / Real TCH')
+plt.title('Predicted vs Actual Values')
+plt.legend()
+
+# Save the plot
+plt.savefig('predicted_vs_actual.png')
+plt.show()
